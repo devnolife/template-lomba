@@ -114,20 +114,6 @@
         "extensions.autoUpdate": false,
         "extensions.ignoreRecommendations": true
       }
-    },
-
-    // ---- Codespaces-specific overrides ------------------------------------
-    "codespaces": {
-      // Repositories that this devcontainer is intended for.
-      // (Adjust to your organisation/repo.)
-      "repositories": {
-        "contest-organizer/*": {
-          "permissions": {
-            "contents": "write",
-            "pull_requests": "write"
-          }
-        }
-      }
     }
   },
 
