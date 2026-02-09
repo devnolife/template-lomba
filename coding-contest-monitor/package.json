@@ -1,0 +1,95 @@
+{
+  "name": "coding-contest-monitor",
+  "displayName": "Coding Contest Monitor",
+  "description": "Monitor coding activity during programming contests - tracks typing patterns, paste events, file operations, and window focus for fair play enforcement.",
+  "version": "1.0.0",
+  "publisher": "contest-organizer",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "contest",
+    "monitor",
+    "proctoring",
+    "coding-competition",
+    "anti-cheat"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "codingContestMonitor.start",
+        "title": "Contest Monitor: Start Monitoring"
+      },
+      {
+        "command": "codingContestMonitor.stop",
+        "title": "Contest Monitor: Stop Monitoring"
+      },
+      {
+        "command": "codingContestMonitor.status",
+        "title": "Contest Monitor: Show Status"
+      },
+      {
+        "command": "codingContestMonitor.flushEvents",
+        "title": "Contest Monitor: Flush Events Now"
+      }
+    ],
+    "configuration": {
+      "title": "Coding Contest Monitor",
+      "properties": {
+        "codingContestMonitor.serverUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Server URL for uploading monitoring events (e.g. https://your-server.com). Can also be set via CONTEST_MONITOR_SERVER_URL environment variable."
+        },
+        "codingContestMonitor.uploadInterval": {
+          "type": "number",
+          "default": 30,
+          "minimum": 5,
+          "maximum": 300,
+          "description": "Interval in seconds between event uploads to the server."
+        },
+        "codingContestMonitor.batchSize": {
+          "type": "number",
+          "default": 100,
+          "minimum": 10,
+          "maximum": 500,
+          "description": "Maximum number of events per upload batch."
+        },
+        "codingContestMonitor.pasteThreshold": {
+          "type": "number",
+          "default": 50,
+          "minimum": 10,
+          "description": "Minimum character count to flag a paste event as suspicious."
+        },
+        "codingContestMonitor.unfocusedAlertSeconds": {
+          "type": "number",
+          "default": 120,
+          "minimum": 30,
+          "description": "Seconds of unfocused window time before triggering an alert."
+        },
+        "codingContestMonitor.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically start monitoring when VS Code opens."
+        },
+        "codingContestMonitor.enableStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show monitoring status in the status bar."
+        }
+      }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/contest-organizer/coding-contest-monitor"
+  }
+}

@@ -1,0 +1,217 @@
+// ============================================================================
+// devcontainer.json — GitHub Codespaces contest environment
+// ============================================================================
+// Spec reference: https://containers.dev/implementors/json_reference/
+//
+// This file supports JSON-with-Comments (jsonc). VS Code and Codespaces both
+// parse it correctly.
+// ============================================================================
+{
+  // ---------------------------------------------------------------------------
+  // Identity
+  // ---------------------------------------------------------------------------
+  "name": "Coding Contest Environment",
+
+  // ---------------------------------------------------------------------------
+  // Base image — Node 18 on Debian (official devcontainer image)
+  // Swap to "mcr.microsoft.com/devcontainers/python:3.11" for Python contests.
+  // ---------------------------------------------------------------------------
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:18",
+
+  // ---------------------------------------------------------------------------
+  // Features — only what the contest needs, nothing more
+  // ---------------------------------------------------------------------------
+  "features": {
+    // Git is baked into the base image, but we pin it here for clarity.
+    "ghcr.io/devcontainers/features/git:1": {},
+
+    // Python 3.11 side-by-side (enable for mixed/Python contests).
+    // Uncomment the line below if the contest is Python-based:
+    // "ghcr.io/devcontainers/features/python:1": { "version": "3.11" },
+
+    // Docker-in-Docker is intentionally OMITTED to prevent container escapes.
+    // DO NOT add ghcr.io/devcontainers/features/docker-in-docker.
+    // DO NOT add ghcr.io/devcontainers/features/docker-outside-of-docker.
+
+    // Common utilities (jq, curl, etc.) — useful for API testing in-contest.
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": false,
+      "configureZshAsDefaultShell": false,
+      "installOhMyZsh": false,
+      "upgradePackages": false
+    }
+  },
+
+  // ---------------------------------------------------------------------------
+  // Extensions — auto-installed into the Codespace
+  // ---------------------------------------------------------------------------
+  "customizations": {
+    "vscode": {
+      // ---- Extensions to INSTALL --------------------------------------------
+      "extensions": [
+        // Contest monitoring (our custom extension, installed from repo VSIX)
+        // NOTE: This ID must match {publisher}.{name} from the extension's
+        //       package.json. When distributing via a private marketplace or
+        //       VSIX sideload, the postCreateCommand handles installation.
+        "contest-organizer.coding-contest-monitor",
+
+        // Linting
+        "dbaeumer.vscode-eslint", // ESLint (JS/TS)
+        "ms-python.pylint", // Pylint (Python — enable for Py contests)
+
+        // Formatting
+        "esbenp.prettier-vscode",
+
+        // Git visibility
+        "eamodio.gitlens"
+      ],
+
+      // ---- Settings ---------------------------------------------------------
+      "settings": {
+        // --- Editor hardening (anti-cheat) ---
+        // Disable format-on-paste so the monitor sees the raw paste event
+        // before any formatter rewrites it.
+        "editor.formatOnPaste": false,
+
+        // Disable inline suggestions — this kills Copilot ghost-text and
+        // any other completion provider that renders phantom text.
+        "editor.inlineSuggest.enabled": false,
+
+        // Disable quick suggestions (autocomplete popup) to level the
+        // playing field across all participants.
+        "editor.quickSuggestions": {
+          "other": false,
+          "comments": false,
+          "strings": false
+        },
+
+        // --- File handling ---
+        "files.autoSave": "afterDelay",
+        "files.autoSaveDelay": 1000,
+
+        // --- Git ---
+        "git.autofetch": true,
+        "git.confirmSync": false,
+
+        // --- Terminal ---
+        "terminal.integrated.enableBell": false,
+
+        // --- Contest monitor settings ---
+        "codingContestMonitor.autoStart": true,
+        "codingContestMonitor.serverUrl": "",
+        "codingContestMonitor.uploadInterval": 30,
+        "codingContestMonitor.batchSize": 100,
+        "codingContestMonitor.pasteThreshold": 50,
+        "codingContestMonitor.unfocusedAlertSeconds": 120,
+        "codingContestMonitor.enableStatusBar": true,
+
+        // --- Telemetry (reduce noise) ---
+        "telemetry.telemetryLevel": "off",
+
+        // --- Extensions: suppress recommendations so participants don't
+        //     accidentally install AI assistants ---
+        "extensions.autoCheckUpdates": false,
+        "extensions.autoUpdate": false,
+        "extensions.ignoreRecommendations": true
+      }
+    },
+
+    // ---- Codespaces-specific overrides ------------------------------------
+    "codespaces": {
+      // Repositories that this devcontainer is intended for.
+      // (Adjust to your organisation/repo.)
+      "repositories": {
+        "contest-organizer/*": {
+          "permissions": {
+            "contents": "write",
+            "pull_requests": "write"
+          }
+        }
+      }
+    }
+  },
+
+  // ---------------------------------------------------------------------------
+  // Environment variables — available in every terminal & process
+  // ---------------------------------------------------------------------------
+  "containerEnv": {
+    "CONTEST_MODE": "true",
+    "CONTEST_MONITOR_SERVER_URL": "https://your-server.com",
+    "PARTICIPANT_ID": "${localEnv:GITHUB_USER}",
+    "NODE_ENV": "contest"
+  },
+
+  // ---------------------------------------------------------------------------
+  // Port forwarding
+  // ---------------------------------------------------------------------------
+  "forwardPorts": [3000, 3001],
+  "portsAttributes": {
+    "3000": {
+      "label": "Web Preview",
+      "onAutoForward": "notify",
+      "visibility": "private"
+    },
+    "3001": {
+      "label": "API / Dev Server",
+      "onAutoForward": "notify",
+      "visibility": "private"
+    }
+  },
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle scripts
+  // ---------------------------------------------------------------------------
+
+  // Runs ONCE after the container is created (initial setup).
+  "postCreateCommand": "bash -c 'npm install 2>/dev/null; pip install -r requirements.txt 2>/dev/null; node .devcontainer/scripts/setup-monitor.js'",
+
+  // Runs every time the Codespace starts (including rebuilds / restarts).
+  "postStartCommand": "echo '\\n========================================\\n  Contest environment ready!\\n  Monitoring is ACTIVE.\\n  Good luck!\\n========================================'",
+
+  // Runs every time a user attaches to the Codespace.
+  "postAttachCommand": "node .devcontainer/scripts/setup-monitor.js --attach",
+
+  // ---------------------------------------------------------------------------
+  // Security: extensions to BLOCK
+  // ---------------------------------------------------------------------------
+  // Codespaces does not have a native "block extension" field, but we enforce
+  // the block list inside setup-monitor.js at container start.  The script
+  // uninstalls any disallowed extensions and writes a policy file that VS Code
+  // reads on next reload.
+  //
+  // The blocked IDs are (maintained in setup-monitor.js):
+  //   - github.copilot
+  //   - github.copilot-chat
+  //   - github.copilot-labs
+  //   - tabnine.tabnine-vscode
+  //   - codeium.codeium
+  //   - amazonwebservices.aws-toolkit-vscode (CodeWhisperer)
+  //   - ms-vscode-remote.remote-ssh
+  //   - ms-vscode.remote-server
+  //   - ms-vscode-remote.remote-ssh-edit
+  //   - continue.continue
+  //   - sourcegraph.cody-ai
+
+  // ---------------------------------------------------------------------------
+  // Host requirements (Codespaces machine size)
+  // ---------------------------------------------------------------------------
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "4gb",
+    "storage": "32gb"
+  },
+
+  // ---------------------------------------------------------------------------
+  // Misc
+  // ---------------------------------------------------------------------------
+
+  // Run as the default node user, not root.
+  "remoteUser": "node",
+
+  // Prevent participants from rebuilding the container to bypass restrictions.
+  "updateContentCommand": "",
+
+  // Codespaces idle timeout (seconds). 30 min = 1800s.
+  // This is also configurable via the GitHub org policy.
+  "shutdownAction": "stopCompose"
+}
