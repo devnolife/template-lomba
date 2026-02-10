@@ -1,0 +1,20 @@
+{
+  "name": "contest-monitor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Contest Monitor — Backend + Dashboard + VS Code Extension",
+  "scripts": {
+    "dev": "concurrently -n server,dashboard -c blue,green \"npm run dev:server\" \"npm run dev:dashboard\"",
+    "dev:server": "cd contest-monitor-server && npm run dev",
+    "dev:dashboard": "cd contest-dashboard && npm run dev",
+    "dev:mock": "cd contest-monitor-server && npm run dev:mock-standalone",
+    "install:all": "cd contest-monitor-server && npm install && cd ../contest-dashboard && npm install",
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "seed:fake": "cd contest-monitor-server && npm run seed:fake"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+  # -------------------------------------------------------
+  # MongoDB
+  # -------------------------------------------------------
+  mongodb:
+    image: mongo:7
+    container_name: contest-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: contest-monitor
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # -------------------------------------------------------
+  # Backend API Server
+  # -------------------------------------------------------
+  backend:
+    build:
+      context: ./contest-monitor-server
+      dockerfile: Dockerfile
+    container_name: contest-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      MONGODB_URI: mongodb://mongodb:27017/contest-monitor
+      JWT_SECRET: ${JWT_SECRET:-lomba-game-contest-monitor-secret-key-2024}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-contestadmin2024}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000,http://localhost}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GITHUB_SYNC_INTERVAL_MIN: ${GITHUB_SYNC_INTERVAL_MIN:-5}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes:
+      - backend_logs:/app/logs
+
+  # -------------------------------------------------------
+  # Admin Dashboard (Nginx + React SPA)
+  # -------------------------------------------------------
+  dashboard:
+    build:
+      context: ./contest-dashboard
+      dockerfile: Dockerfile
+    container_name: contest-dashboard
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongodb_data:
+  backend_logs:

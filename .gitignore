@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+build/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+nul
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# VSIX packages (large binary)
+*.vsix
+
+# Coverage
+coverage/
+
+# Temp
+tmp/
+temp/
