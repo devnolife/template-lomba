@@ -68,6 +68,9 @@ const MONITOR_VSIX_GLOB = path.join(
   '*.vsix',
 );
 
+// Alternative path if extension is bundled at root
+const MONITOR_VSIX_GLOB_ALT = path.join(__dirname, '..', '..', '*.vsix');
+
 const MONITORING_SERVER =
   process.env.CONTEST_MONITOR_SERVER_URL || 'https://your-server.com';
 const PARTICIPANT_ID =
